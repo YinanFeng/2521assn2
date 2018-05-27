@@ -1,24 +1,31 @@
 //CentralityMeasures.c
 #include<stdio.h>
 #include<stdlib.h>
-
 #define infinity 9999999
 #include "CentralityMeasures.h"
 #include "Dijkstra.h"
 
-
 int* distanceBetweenVertex(Graph g,Vertex src,ShortestPaths sp);
 int numbersOfPath(Graph g,Vertex a,Vertex b,ShortestPaths sp);
-
-
+int PathThroughVertex(Graph g,Vertex a,Vertex b, Vertex v, ShortestPaths sp);
+void Free2dArray(int **array, int row) {
+	for (int i = 0; i < row; i ++) {
+		free(array[i]);
+	}
+	free(array);
+}
+NodeValues *newNode(Graph g) {
+	NodeValues *new = malloc(sizeof(NodeValues));
+	new->noNodes = numVerticies(g);
+	new->values = calloc(new->noNodes,sizeof(double));
+    //printf("%d\n",new->noNodes);
+	return new;
+}
 NodeValues outDegreeCentrality(Graph g){
-    NodeValues outNode;
-    outNode.noNodes = numVerticies(g);
-    outNode.values = calloc(outNode.noNodes,sizeof(double));
+    NodeValues outNode = *newNode(g);   
     int v = 0;
-    
     while(v < outNode.noNodes){
-        AdjList allOut = inIncident(g,v);
+        AdjList allOut = outIncident(g,v);
         AdjList record = allOut;
         int n = 0;
         while(record != NULL){
@@ -33,11 +40,8 @@ NodeValues outDegreeCentrality(Graph g){
 
 
 NodeValues inDegreeCentrality(Graph g){
-    NodeValues inNode;
-    inNode.noNodes = numVerticies(g);
-    inNode.values = calloc(inNode.noNodes,sizeof(double));
+    NodeValues inNode = *newNode(g);
     int v = 0;
-    
     while(v < inNode.noNodes){
         AdjList allIn = inIncident(g,v);
         AdjList record = allIn;
@@ -52,90 +56,124 @@ NodeValues inDegreeCentrality(Graph g){
     return inNode;
 }
 
-
-
-//?????????????return inDegreeCentrality/outDegreeCentrality
+//
 NodeValues degreeCentrality(Graph g){
-    return outDegreeCentrality(g);
+	/*NodeValues Nondirect = *newNode(g);
+	int **in = malloc(Nondirect.noNodes*sizeof(int*));
+	int **out = malloc(Nondirect.noNodes*sizeof(int*));
+	for (int i = 0; i < Nondirect.noNodes; i++) {
+		in[i] = malloc((Nondirect.noNodes -1)*sizeof(int));
+		out[i] = malloc((Nondirect.noNodes -1)*sizeof(int));
+		for (int j = 0; j < Nondirect.noNodes; j++) {
+			if (i != j) in[i][j] = out[i][j] = 0;
+		}
+	}
+	for (int v = 0; v < Nondirect.noNodes; v++) {
+		AdjList allIn = inIncident(g,v);
+		while (allIn != NULL) {
+			in[v][allIn->w] = 1;
+			allIn = allIn->next;
+		}
+	}
+	for (int v = 0; v < Nondirect.noNodes; v++) {
+		AdjList allOut = outIncident(g,v);
+		while (allOut != NULL) {
+			out[v][allOut->w] = 1;
+			allOut = allOut->next;
+		}
+	}
+	int n = 0;
+    //printf("aaa\n");
+	for (int i = 0; i < Nondirect.noNodes; i++) {
+		for (int j = 0; j < Nondirect.noNodes; j++) {
+			if (i == j) continue;
+			if (out[i][j] == in[j][i] == 0) continue;
+			n++;	
+		}
+		Nondirect.values[i] = n;
+	}
+	Free2dArray(in, Nondirect.noNodes);
+	Free2dArray(out, Nondirect.noNodes);
+    return Nondirect; */
+    NodeValues Nondirect = inDegreeCentrality(g);
+    NodeValues out = outDegreeCentrality(g);
+    for (int v = 0; v < Nondirect.noNodes; v++) {
+        Nondirect.values[v] += out.values[v];
+    }
+    return Nondirect;
+
 }
 
-//Why 分母(n-1)nodes 不是n吗 所有reachable的都要加上去？？？(n-1)nodes
 NodeValues closenessCentrality(Graph g){
-    NodeValues closenessNode;
-    closenessNode.noNodes = numVerticies(g);
-    closenessNode.values = calloc(closenessNode.noNodes,sizeof(double));
-
+    NodeValues closenessNode = *newNode(g);
     int n = 0;
     while(n < closenessNode.noNodes){
         ShortestPaths sp = dijkstra(g,n);
-        int total = 0, i = 0, counter = 0;
+        int total = 0, i = 0;
         while(i < closenessNode.noNodes){
             if(sp.dist[i] != infinity){
-                counter = counter + 1;
-                int k=0;
-                PredNode* record = sp.pred[i];
-                k = i;
-                while(record != NULL){
-                    total = total + sp.dist[k];
-                    k = record->v;
-                    record = sp.pred[record->v];
-                }
+                total += sp.dist[i];
             }
             i++;
         }
-        closenessNode.values[n] = counter/(closenessNode.noNodes-1)*counter/total;
+        if (total == 0) closenessNode.values[n] = 0;
+      	else  closenessNode.values[n] = (closenessNode.noNodes -1)/total;
         n++;
+    } 
+    return closenessNode;
+}
+int numbersOfPath(Graph g,Vertex a,Vertex b,ShortestPaths sp){
+    if(a == b){
+        return 0;
+    }
+    if(sp.pred[b]->v == a){
+        return 1;
+    } 
+    PredNode* record = sp.pred[b];
+    int stagePath = 0;
+    while(record != NULL){
+        stagePath = stagePath + numbersOfPath(g,a,record->v,sp);
+        record = record->next;
     }
     
-    return closenessNode;
+    return stagePath;
+    
+}
+int PathThroughVertex(Graph g,Vertex a,Vertex b, Vertex v, ShortestPaths sp){
+    if(a == b){
+        return 0;
+    }
+    if(sp.pred[b]->v == v){
+        return 1;
+    } 
+    PredNode* record = sp.pred[b];
+    int stagePath = 0;
+    while(record != NULL){
+        stagePath = stagePath + numbersOfPath(g,a,record->v,sp);
+    }
+    
+    return stagePath;
+    
 }
 
 NodeValues betweennessCentrality(Graph g){
-    NodeValues betweenessNode;
-    betweenessNode.noNodes = numVerticies(g);
-    betweenessNode.values = calloc(betweenessNode.noNodes,sizeof(double));
-    
-    ShortestPaths* sp = calloc(betweenessNode.noNodes,sizeof(ShortestPaths));
-    int k = 0;
-    while(k<betweenessNode.noNodes){
-        sp[k] = dijkstra(g,k);
-        k++;
+    NodeValues betweenessNode = *newNode(g);
+    for (int x = 0; x < betweenessNode.noNodes; x++) {
+    	int count = 0;
+    	for (int y = 0; y < betweenessNode.noNodes; y++) {
+    		if (y == x) continue;
+			ShortestPaths s = dijkstra(g, y);
+			for(int z = 0; z < betweenessNode.noNodes; z++) {
+				if (z == x || z == y) continue;
+				if (PathThroughVertex(g,y,z,x,s) == 0 || numbersOfPath(g,y,z,s) == 0) {
+					count = 0;
+					continue;	
+				} 	
+				count += PathThroughVertex(g,y,z,x,s)/numbersOfPath(g,y,z,s);	
+			}
+    	}
+    	betweenessNode.values[x] = count;	
     }
-    
-    int** allDistance = calloc(betweenessNode.noNodes,sizeof(int*));
-    int p = 0;
-    while(p<betweenessNode.noNodes){
-        allDistance[p] = distanceBetweenVertex(g,p,sp[p]);
-        p++;
-    }
-    
-    //Some num of path do not need to count  没有经过v, 所以对 numofpath 不用全部算出来 可能浪费时间 需要的时候算即可
-
-
-    int z = 0;
-    while(z < betweenessNode.noNodes){
-        double total = 0;
-        int n = 0;
-        while(n < betweenessNode.noNodes){
-            if(n == z){
-            }else{
-                int m = 0;
-                while(m < betweenessNode.noNodes){
-                    if(m == z){
-                    }else{
-                        if(allDistance[n][z] + allDistance[z][m] != allDistance[n][m]){
-                        }else{
-                            total = total + numbersOfPath(g,n,z,sp[n])*numbersOfPath(g,z,m,sp[z])/numbersOfPath(g,n,m,sp[n]);
-                        }
-                    }
-                }
-            }
-            n++;
-        }
-        betweenessNode.values[z] = total;
-        z++;
-    }
-
     return betweenessNode;
  
     
@@ -166,32 +204,10 @@ int* distanceBetweenVertex(Graph g,Vertex src,ShortestPaths sp){
 }
 
 
-int numbersOfPath(Graph g,Vertex a,Vertex b,ShortestPaths sp){
-    if(a == b){
-        return 0;
-    }
-    
-    if(sp.pred[b]->v == a){
-        return 1;
-    }
-    
-    PredNode* record = sp.pred[b];
-    int stagePath = 0;
-    while(record != NULL){
-        stagePath = stagePath + numbersOfPath(g,a,record->v,sp);
-        record = record->next;
-    }
-    
-    return stagePath;
-    
-}
 
 NodeValues betweennessCentralityNormalised(Graph g){
     NodeValues betweeness = betweennessCentrality(g);
-    NodeValues norm;
-    norm.noNodes = numVerticies(g);
-    norm.values = calloc(betweeness.noNodes,sizeof(double));
-    
+    NodeValues norm = *newNode(g);
     int max = 0;
     int min = infinity;
     int n = 0;
@@ -204,30 +220,26 @@ NodeValues betweennessCentralityNormalised(Graph g){
         }
         n++;
     }
-    
     int k = 0;
     while(k < norm.noNodes){
         norm.values[k] = (betweeness.values[k] - min)/(max-min);
         k++;
     }
-    
+    freeNodeValues(betweeness);
     return norm;
- 
 }
 
 void showNodeValues(NodeValues node){
     printf("NumberOfNodes: %d\n",node.noNodes);
     int i = 0;
     while(i < node.noNodes){
-        printf("%f  ",node.values[i]);
+        printf("%f  \n",node.values[i]);
         i++;
     }
 }
 
 void  freeNodeValues(NodeValues node){
-    //needed???
     free(node.values);
-   //????????? free(node);
 }
 
 
