@@ -1,7 +1,7 @@
 #ifndef _CS2521_GRAPH_VIS_H
 #define _CS2521_GRAPH_VIS_H
 
-//#include "Graph.h"
+#include "Graph.h"
 
 #define DEFAULT 0
 #define DEGREE_IN 1
@@ -10,5 +10,5 @@
 #define CLOSENESS 4
 #define BETWEENNESS 5
 
-//void graphVis(Graph g, int mode);
+void graphVis(Graph g, int mode);
 #endif
