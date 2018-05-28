@@ -116,15 +116,16 @@ AdjList outIncident(Graph g, Vertex v){
 AdjList inIncident(Graph g, Vertex v){
     assert(g != NULL);
     AdjList curr, temp, record;
-    curr = temp = record =malloc(sizeof(adjListNode));
+    curr = temp = record =calloc(1, sizeof(adjListNode));
     int first = 0;
     for (int i = 0; i < g->nV; i++) {
         if (i == v) continue;
         record = g->edges[i];
         while (record != NULL) {
+            //printf("%d\n", record->w);
             if (record->w > v) break;
             if (record->w == v) {
-                AdjList new = malloc(sizeof(adjListNode));
+                AdjList new = calloc(1,sizeof(adjListNode));
                 new->w = i;
                 new->weight = record->weight;
                 if (first == 0) {
@@ -139,7 +140,7 @@ AdjList inIncident(Graph g, Vertex v){
             record = record->next;
         }
     }
-    if (temp == NULL) return NULL;
+    if (temp->w ==0 && temp->weight == 0) return NULL;
     return temp;
 }
 
