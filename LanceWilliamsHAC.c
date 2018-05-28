@@ -9,8 +9,9 @@
 
 
 int min(int a,int b);
+int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram);
 double updateDistance(double a,double b);
-
+int createNewVertex(int a, int b);
 
 
 /*
@@ -25,7 +26,7 @@ double updateDistance(double a,double b);
 Dendrogram LanceWilliamsHAC(Graph g, int method){
 
     //Create a matrix for recording dist[a,b]
-    double** distance = malloc(numVerticies(g)*sizeof(numVerticies(g)*(double*));
+    double** distance = malloc(numVerticies(g)*sizeof(double*));
     int j = 0;
     while(j < numVerticies(g)){
         distance[j] = malloc(numVerticies(g)*sizeof(double));
@@ -45,12 +46,16 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
         b++;
     }
 
+    //record the index to return
+    int recordLast = 0;
+
     if(method == 1){
         ShortestPaths** sp = malloc(numVerticies(g)*sizeof(ShortestPaths*));
         int k = 0;
         while(k < numVerticies(g)){
             //do not need to calloc for sp[k]?
-            sp[k] = dijkstra(g,k);
+            sp[k] = malloc(sizeof(ShortestPaths));
+            *sp[k] = dijkstra(g,k);
             k++;
         }
 
@@ -62,12 +67,12 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
                 if(sp[z]->dist[m] == 0 && sp[m]->dist[z] == 0){
                     distance[z][m] = infinity;
                 }else{
-                    distance[z][m] = 1/min(sp[z]->dist[m],sp[m]->dist[z])
+                    distance[z][m] = 1/min(sp[z]->dist[m],sp[m]->dist[z]);
                 }
             }
         }
 
-        int recordLast;
+
         int p = findShortestAndMerge(g,distance,Dgram);
         while(p != -1){
             recordLast = p;
@@ -91,10 +96,10 @@ int min(int a,int b){
     return a;
 }
 
-void findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
+int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
     int shortestDistance = infinity;
-    int vertexA = -1;
-    int vertexB = -1;
+    int placeA = -1;
+    int placeB = -1;
 
     //find shortest distance
     int k =0;
@@ -107,8 +112,8 @@ void findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
             }
             if((shortestDistance == infinity)||(shortestDistance != infinity && distance[k][m] > shortestDistance && distance[k][m] != infinity)){
                 shortestDistance = distance[k][m];
-                vertexA = k;
-                vertexB = m;
+                placeA = k;
+                placeB = m;
             }
             m++;
         }
@@ -116,45 +121,46 @@ void findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
     }
 
     //merge
-    if(vertexA == -1 && vertexB == -1){
+    if(placeA == -1 && placeB == -1){
         return -1;
     }else{
         Dendrogram newGram = malloc(sizeof(DNode));
-        newGram->vertex = vertexA;
-        newGram->left = Dgram[vertexA];
-        newGram->right = Dgram[vertexB];
+        newGram->vertex = createNewVertex(Dgram[placeA]->vertex,Dgram[placeB]->vertex);
+        newGram->left = Dgram[placeA];
+        newGram->right = Dgram[placeB];
 
         //update the array
         //put the new Dgram in the smaller index vertex
-        Dgram[vertexA] = newGram;
-        Dgram[vertexB] = NULL;
+        Dgram[placeA] = newGram;
+        Dgram[placeB] = NULL;
 
         //update the matrix
         int q = 0;
         while(q < numVerticies(g)){
-            if(q < vertexA){
-                diatance[q][vertexA] = updateDistance(distance[q][vertexA],distance[q][vertexB]);
-                distance[q][vertexB] = 0;
+            if(q < placeA){
+                distance[q][placeA] = updateDistance(distance[q][placeA],distance[q][placeB]);
+                distance[q][placeB] = 0;
             }
-            if(q == vertexA){
-                distance[q][vertexB] = 0;
+            if(q == placeA){
+                distance[q][placeB] = 0;
             }
-            if(q > vertexA && q < vertexB){
-                distance[vertexA][q] = updateDistance(distance[vertexA][q],distance[q][vertexB]);
-                distance[q][vertexB] = 0;
+            if(q > placeA && q < placeB){
+                distance[placeA][q] = updateDistance(distance[placeA][q],distance[q][placeB]);
+                distance[q][placeB] = 0;
             }
-            if(q == vertexB){
+            if(q == placeB){
                 //do nothing
             }
-            if(q > vertexB){
-                distance[vertexA][q] = updateDistance(distance[vertexA][q],distance[vertexB][q]);
-                distance[vertexB][q] = 0;
+            if(q > placeB){
+                distance[placeA][q] = updateDistance(distance[placeA][q],distance[placeB][q]);
+                distance[placeB][q] = 0;
             }
             q++;
         }
-        return vertexA;
+        return placeA;
     }
 }
+
 
 
 double updateDistance(double a,double b){
@@ -173,7 +179,14 @@ double updateDistance(double a,double b){
     return b;
 }
 
-
+//will it too big? int: overflow
+int createNewVertex(int a, int b){
+    int pow = 10;
+    while(b >= pow){
+        pow = pow * 10;
+    }
+    return a * pow + b;
+}
 
 
 
