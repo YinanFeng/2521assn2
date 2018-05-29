@@ -3,15 +3,17 @@
 #include<stdlib.h>
 
 #include "LanceWilliamsHAC.h"
-#include "Dijkstra.h"
-#include "PQ.h"
+
+//#include "Dijkstra.h"
+//#include "PQ.h"
 #define infinity 9999999
 
 
 int min(int a,int b);
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram);
 double updateDistance(double a,double b);
-int createNewVertex(int a, int b);
+//int createNewVertex(int a, int b);
+void fillDirectMatrix(graph g,int** direct);
 
 
 /*
@@ -33,6 +35,7 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
         j++;
     }
 
+
     //Create a array of Dendrogram Node
     Dendrogram *Dgram = malloc(numVerticies(g)*sizeof(Dendrogram));
     int b = 0;
@@ -46,28 +49,50 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
         b++;
     }
 
+    //create a matrix to record direct distance between 2 vertex.
+    int** direct = malloc(numVerticies(g)*sizeof(int*));
+    int ss = 0;
+    while(ss < numVerticies(g)){
+        direct[ss] = malloc(numVerticies(g)*sizeof(int));
+    }
+    //set all value in direct matrix with 0;
+    int qq = 0;
+    while(qq < numVerticies(g)){
+        int kk = 0;
+        while(kk < numVerticies(g)){
+            direct[qq][kk] = 0;
+            kk++;
+        }
+        qq++;
+    }
+    
+    fillDirectMatrix(graph g,int** direct);
+    
+    
     //record the index to return
     int recordLast = 0;
 
     if(method == 1){
-        ShortestPaths** sp = malloc(numVerticies(g)*sizeof(ShortestPaths*));
-        int k = 0;
-        while(k < numVerticies(g)){
+
+        
+   //     ShortestPaths** sp = malloc(numVerticies(g)*sizeof(ShortestPaths*));
+      //  int k = 0;
+      //  while(k < numVerticies(g)){
             //do not need to calloc for sp[k]?
-            sp[k] = malloc(sizeof(ShortestPaths));
-            *sp[k] = dijkstra(g,k);
-            k++;
-        }
+          //  sp[k] = malloc(sizeof(ShortestPaths));
+         //   *sp[k] = dijkstra(g,k);
+      //      k++;
+        //}
 
         //compare th distance  fill the matrix: distance.
         int z = 0;
         while(z < numVerticies(g)){
             int m = z+1;
             while(m < numVerticies(g)){
-                if(sp[z]->dist[m] == 0 && sp[m]->dist[z] == 0){
+                if(direct[z][m] == 0 && direct[m][z] == 0){
                     distance[z][m] = infinity;
                 }else{
-                    distance[z][m] = 1/min(sp[z]->dist[m],sp[m]->dist[z]);
+                    distance[z][m] = 1/min(direct[m][z],direct[z][m]);
                 }
             }
         }
@@ -125,7 +150,7 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
         return -1;
     }else{
         Dendrogram newGram = malloc(sizeof(DNode));
-        newGram->vertex = createNewVertex(Dgram[placeA]->vertex,Dgram[placeB]->vertex);
+        newGram->vertex = -1;
         newGram->left = Dgram[placeA];
         newGram->right = Dgram[placeB];
 
@@ -179,6 +204,25 @@ double updateDistance(double a,double b){
     return b;
 }
 
+void fillDirectMatrix(graph g,int** direct){
+    int i = 0;
+    while(i < numVerticies(g)){
+        AdjList record = outIncident(g,i);
+        while(record!= NULL){
+            direct[i][record->w] = record->next;
+            record = record->next;
+        }
+        i++;
+    }
+}
+
+
+
+
+
+
+
+/*
 //will it too big? int: overflow
 int createNewVertex(int a, int b){
     int pow = 10;
@@ -187,7 +231,7 @@ int createNewVertex(int a, int b){
     }
     return a * pow + b;
 }
-
+*/
 
 
 
