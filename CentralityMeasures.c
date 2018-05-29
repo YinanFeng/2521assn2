@@ -150,20 +150,16 @@ NodeValues betweennessCentrality(Graph g){
     for (int x = 0; x < betweenessNode.noNodes; x++) {
     	double count = 0;
     	for (int y = 0; y < betweenessNode.noNodes; y++) {
-    		if (y == x) {
-                continue;
-			}
-            ShortestPaths s = dijkstra(g, y);
-			for(int z = 0; z < betweenessNode.noNodes; z++) {
-				if (z == x || z == y) {
-                    continue;
-                }
-                //if (x == 55 && PathThroughVertex(g,y,z,x,s) != 0 )
-                //printf("%d %d->%d PathThroughVertex %lf, numbersOfPath(g,y,z,s) %lf  %lf\n",x, y, z,PathThroughVertex(g,y,z,x,s), numbersOfPath(g,y,z,s), PathThroughVertex(g,y,z,x,s)/numbersOfPath(g,y,z,s));
-                if (PathThroughVertex(g,y,z,x,s) == 0 || numbersOfPath(g,y,z,s) == 0) continue;
-                
-				count += PathThroughVertex(g,y,z,x,s)/numbersOfPath(g,y,z,s);	
-			}
+    		if (y != x) {
+                ShortestPaths s = dijkstra(g, y);
+    			for(int z = 0; z < betweenessNode.noNodes; z++) {
+    				if (z != x && z != y) {    
+                        
+                        if (PathThroughVertex(g,y,z,x,s) != 0 && numbersOfPath(g,y,z,s) != 0)
+        				count += PathThroughVertex(g,y,z,x,s)/numbersOfPath(g,y,z,s);	
+                    }
+    			}
+            }
     	}
     	betweenessNode.values[x] = count;	
     }
