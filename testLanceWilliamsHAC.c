@@ -39,19 +39,35 @@ Graph readGraph(char* file) {
 		fprintf(stderr, "ERROR READING FILE %s\n", file);
 		return NULL;
 	}
-	Graph g = newGraph(lines);
 	int a=0;
 	int b=0;
 	int c=0;
 	int i = 0;
+	int maxVert = -1;
+	int **nums = malloc(sizeof(int*)*lines);
+	for(i=0;i<lines;i++) nums[i] = malloc(sizeof(int)*3);
+	i=0;
 	while(i < lines) {
 		fscanf(f, "%d,", &a);
 		fscanf(f, "%d,", &b);
 		fscanf(f, "%d", &c);
-		insertEdge(g,a,b,c);
+		if (a > maxVert) maxVert = a;
+		if (b > maxVert) maxVert = b;
+		nums[i][0] = a;
+		nums[i][1] = b;
+		nums[i][2] = c;
 		i++;
 	}
 	fclose(f);
+
+	Graph g = newGraph(maxVert+1);
+	i = 0;
+	while(i < lines) {
+		insertEdge(g,nums[i][0],nums[i][1],nums[i][2]);
+		i++;
+	}
+	for(i=0;i<lines;i++) free(nums[i]);
+	free(nums);
 	return g;
 }
 
@@ -81,6 +97,7 @@ int main(int argc, char* argv[]){
 		return EXIT_FAILURE;
 	}
     Graph g = readGraph(argv[1]);
+    printf("noV:%d\n",numVerticies(g));
     Dendrogram t = LanceWilliamsHAC(g,1);
     doShowBSTree(t);
     /*if (argv[2][0] == 'v') {

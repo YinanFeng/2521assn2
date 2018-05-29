@@ -9,11 +9,11 @@
 #define infinity 9999999
 
 
-int min(int a,int b);
+double min(double a,double b);
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram);
 double updateDistance(double a,double b);
 //int createNewVertex(int a, int b);
-void fillDirectMatrix(graph g,int** direct);
+void fillDirectMatrix(Graph g,int** direct);
 
 
 /*
@@ -54,6 +54,7 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
     int ss = 0;
     while(ss < numVerticies(g)){
         direct[ss] = malloc(numVerticies(g)*sizeof(int));
+        ss++;
     }
     //set all value in direct matrix with 0;
     int qq = 0;
@@ -65,9 +66,11 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
         }
         qq++;
     }
+
     
-    fillDirectMatrix(graph g,int** direct);
-    
+    fillDirectMatrix(g,direct);
+  //  printf("hereeeeee\n");
+
     
     //record the index to return
     int recordLast = 0;
@@ -84,7 +87,7 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
       //      k++;
         //}
 
-        //compare th distance  fill the matrix: distance.
+        //compare the distance  fill the matrix: distance.
         int z = 0;
         while(z < numVerticies(g)){
             int m = z+1;
@@ -92,12 +95,19 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
                 if(direct[z][m] == 0 && direct[m][z] == 0){
                     distance[z][m] = infinity;
                 }else{
-                    distance[z][m] = 1/min(direct[m][z],direct[z][m]);
+                    double dA = (double)direct[m][z];
+                    double dB = (double)direct[z][m];
+                    distance[z][m] = 1/min(dA,dB);
+                      //  printf("%f\n",distance[z][m]);
                 }
+                m++;
             }
+            z++;
         }
+    //    printf("%f\n",distance[0][1]);
 
-
+        
+        
         int p = findShortestAndMerge(g,distance,Dgram);
         while(p != -1){
             recordLast = p;
@@ -108,7 +118,7 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
     return Dgram[recordLast];
 }
 
-int min(int a,int b){
+double min(double a,double b){
     if(a == 0){
         return b; 
     }
@@ -120,6 +130,9 @@ int min(int a,int b){
     }
     return a;
 }
+
+
+
 
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram){
     int shortestDistance = infinity;
@@ -204,12 +217,12 @@ double updateDistance(double a,double b){
     return b;
 }
 
-void fillDirectMatrix(graph g,int** direct){
+void fillDirectMatrix(Graph g,int** direct){
     int i = 0;
     while(i < numVerticies(g)){
         AdjList record = outIncident(g,i);
         while(record!= NULL){
-            direct[i][record->w] = record->next;
+            direct[i][record->w] = record->weight;
             record = record->next;
         }
         i++;
@@ -232,6 +245,10 @@ int createNewVertex(int a, int b){
     return a * pow + b;
 }
 */
+
+
+
+
 
 
 
