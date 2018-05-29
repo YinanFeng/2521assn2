@@ -119,25 +119,26 @@ AdjList inIncident(Graph g, Vertex v){
     curr = temp = record =calloc(1, sizeof(adjListNode));
     int first = 0;
     for (int i = 0; i < g->nV; i++) {
-        if (i == v) continue;
-        record = g->edges[i];
-        while (record != NULL) {
-            //printf("%d\n", record->w);
-            if (record->w > v) break;
-            if (record->w == v) {
-                AdjList new = calloc(1,sizeof(adjListNode));
-                new->w = i;
-                new->weight = record->weight;
-                if (first == 0) {
-                    temp = curr = new;
-                    first = 1;
-                } else {
-                    curr->next = new;
-                    curr = new;
+        if (i != v) {
+            record = g->edges[i];
+            while (record != NULL) {
+                //printf("%d\n", record->w);
+                if (record->w > v) break;
+                if (record->w == v) {
+                    AdjList new = calloc(1,sizeof(adjListNode));
+                    new->w = i;
+                    new->weight = record->weight;
+                    if (first == 0) {
+                        temp = curr = new;
+                        first = 1;
+                    } else {
+                        curr->next = new;
+                        curr = new;
+                    }
+                    break;
                 }
-                break;
+                record = record->next;
             }
-            record = record->next;
         }
     }
     if (temp->w ==0 && temp->weight == 0) return NULL;
