@@ -8,6 +8,7 @@
 int* distanceBetweenVertex(Graph g,Vertex src,ShortestPaths sp);
 double numbersOfPath(Graph g,Vertex a,Vertex b,ShortestPaths sp);
 double PathThroughVertex(Graph g,Vertex a,Vertex b, Vertex v, ShortestPaths sp);
+double distance(ShortestPaths sp, int i);
 void Free2dArray(int **array, int row) {
 	for (int i = 0; i < row; i ++) {
 		free(array[i]);
@@ -43,8 +44,7 @@ NodeValues inDegreeCentrality(Graph g){
     NodeValues inNode = *newNode(g);
     int v = 0;
     while(v < inNode.noNodes){
-        AdjList allIn = inIncident(g,v);
-        //if (allIn == NULL)
+        AdjList allIn = inIncident(g,v);       
         AdjList record = allIn;
         int n = 0;
         while(record != NULL){
@@ -57,7 +57,6 @@ NodeValues inDegreeCentrality(Graph g){
     return inNode;
 }
 
-//
 NodeValues degreeCentrality(Graph g){
     NodeValues Nondirect = inDegreeCentrality(g);
     NodeValues out = outDegreeCentrality(g);
@@ -66,25 +65,55 @@ NodeValues degreeCentrality(Graph g){
     }
     return Nondirect;
 }
-
+int hasPath(Graph g, Vertex v) {
+    AdjList allOut = outIncident(g,v);
+    while (allOut != NULL) {
+        ShortestPaths s = dijkstra(g,allOut->w); 
+        if (s.dist[v] != infinity) return 1;
+        allOut = allOut->next;
+    }
+    return 0;
+}
+int reachable(Graph g, Vertex v) {
+    int Path = 0;
+    ShortestPaths sp = dijkstra(g,v);
+    for(int i = 0; i < sp.noNodes; i++) {
+        if (sp.dist[i] != infinity && sp.dist[i] != 0 && i != v) {
+            //printf("%d-> %d  %d\n", v, i,sp.dist[i] );
+            Path++;
+        }
+    }
+    //printf("%d\n",Path);
+    return (Path + hasPath(g, v)) - 1;
+}
+double distance(ShortestPaths sp, int i) {
+    if (i == sp.noNodes) return 0;
+    else if (sp.dist[i]!= infinity )return sp.dist[i] + distance(sp, i+1);
+    else return distance(sp, i+1);
+}
 NodeValues closenessCentrality(Graph g){
     NodeValues closenessNode = *newNode(g);
+    //printf("%d\n", closenessNode.noNodes);
     int n = 0;
+    int num = closenessNode.noNodes - 1;
     while(n < closenessNode.noNodes){
         ShortestPaths sp = dijkstra(g,n);
-        int total = 0, i = 0;
-        while(i < closenessNode.noNodes){
-            if(sp.dist[i] != infinity){
-                total += sp.dist[i];
-            }
-            i++;
-        }
-        if (total == 0) closenessNode.values[n] = 0;
-      	else  closenessNode.values[n] = (closenessNode.noNodes -1)/total;
+        double dis = distance(sp, 0);
+        //printf("here\n");
+        if (dis == 0) {
+            n++;
+            continue;
+      	} else  {
+            //printf("%d, %f, %d\n", n, distance, num);
+            closenessNode.values[n] = reachable(g,n)/dis;
+            //printf("%d\n",  reachable(g,n));
+            closenessNode.values[n] = (double)reachable(g,n)/num * closenessNode.values[n];
+        }    
         n++;
     } 
     return closenessNode;
 }
+
 double numbersOfPath(Graph g,Vertex a,Vertex b,ShortestPaths sp){
     if (a == b) return 0;
     PredNode* record = sp.pred[b];
