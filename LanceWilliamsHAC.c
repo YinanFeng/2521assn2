@@ -87,14 +87,7 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
                 }else{
                     double dA = (double)direct[m][z];
                     double dB = (double)direct[z][m];
-                    if(method == 1){
-                        distance[z][m] = 1/min(dA,dB);
-                    }
-                    if(method == 2){
-                      //  printf("here\n");
-                        distance[z][m] = 1/max(dA,dB);
-                     //   printf("%f\n",distance[2][4]);
-                    }
+                    distance[z][m] = 1/max(dA,dB);
                 }
                 m++;
             }
@@ -183,10 +176,10 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
         int q = 0;
         while(q < numVerticies(g)){
             if(q < placeA){
-                if(method == 1){
+                if(method == 2){
                     distance[q][placeA] = updateDistance(distance[q][placeA],distance[q][placeB]);
                 }
-                if(method == 2){
+                if(method == 1){
                     distance[q][placeA] = updateLongestDistance(distance[q][placeA],distance[q][placeB]);
                 }
                 distance[q][placeB] = 0;
@@ -195,10 +188,10 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                 distance[q][placeB] = 0;
             }
             if(q > placeA && q < placeB){
-                if(method == 1){
+                if(method == 2){
                     distance[placeA][q] = updateDistance(distance[placeA][q],distance[q][placeB]);
                 }
-                if(method == 2){
+                if(method == 1){
                     distance[placeA][q] = updateLongestDistance(distance[placeA][q],distance[q][placeB]);
                 }
                 distance[q][placeB] = 0;
@@ -207,10 +200,10 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                 //do nothing
             }
             if(q > placeB){
-                if(method == 1){
+                if(method == 2){
                     distance[q][placeA] = updateDistance(distance[placeA][q],distance[placeB][q]);
                 }
-                if(method == 2){
+                if(method == 1){
                     distance[q][placeA] = updateLongestDistance(distance[placeA][q],distance[placeB][q]);
                 }
                 distance[placeA][q] = updateDistance(distance[placeA][q],distance[placeB][q]);
