@@ -1,154 +1,137 @@
+// Dijkstra.c
+// taken from week07 lecture slides
+/* written by
+        Haoyue Qiu(z5123104@unsw.edu.au) and Yinan Feng（z5167277@unsw.edu.au*/
+
 #include<stdio.h>
 #include<stdlib.h>
-
 #define True 1
 #define False 0
 #define infinity 9999999
-
-
-//right??? Can I do this way?can i do it?
 #include "Dijkstra.h"
 #include "PQ.h"
 
 
 typedef struct ShortestPaths* Shortest;
+Shortest new(Graph g, Vertex v);
+// create new ShortestPath whose src is v
+ItemPQ *newItemPQ(int key, int value);
+// create new pq->items[] with given key and value
+void addIntoPred(Shortest s, int nth, Vertex v);
+// add new node to s->pred[]
+void replacePred(Shortest s, int nth, Vertex v);
+// delete all the node in pred and add a new node which the distance is shorter
 
+
+Shortest new(Graph g, Vertex v) {
+    Shortest new = malloc(sizeof(ShortestPaths));
+    new->noNodes = numVerticies(g);
+    new->src = v;
+    new->dist = malloc(new->noNodes*sizeof(int));
+    new->pred = malloc(new->noNodes*sizeof(PredNode*));
+    // initialize each value in the node
+    int i = 0;
+    while(i < new->noNodes){
+        new->dist[i] = infinity;
+        new->pred[i] = NULL;
+        i++;
+    }
+    return new;
+}
+
+ItemPQ *newItemPQ(int key, int value) {
+    ItemPQ *new = malloc(sizeof(ItemPQ));
+    new->key = key;
+    new->value = value;
+    // initialize all the values in ItemPQ
+    return new;
+
+}
+
+
+void addIntoPred(Shortest s, int nth, Vertex v) {
+    PredNode *new = malloc(sizeof(PredNode));
+    new->v = v;
+    new->next = NULL;
+    if (s->pred[nth] == NULL) {
+    // if the vertex nth hasnt been visited before;
+        s->pred[nth] = new;
+    } else {
+    // if the vertex nth has been visited
+    PredNode *curr = s->pred[nth];
+    while (curr->next != NULL) {
+        if (curr->v == v) return;
+        // if v has already found that is the previous vertex of nth
+        curr = curr->next;
+    }
+    if (curr->v == v) return;
+    // if v has already found that is the previous vertex of nth 
+    // and it is at the end of the list
+    curr->next = new;
+    // if v not in the list, add it to the end of list
+    }
+}
+
+
+void replacePred(Shortest s, int nth, Vertex v) {
+    while (s->pred[nth]->next != NULL) {
+        PredNode *temp = s->pred[nth];
+        s->pred[nth] = s->pred[nth]->next;
+        free(temp);
+        // loop to free all the node
+    }
+    s->pred[nth]->v = v;
+    // and replace the previous vertex 
+    
+}
 
 
 ShortestPaths dijkstra(Graph g, Vertex v){
     
-    Shortest shortest = malloc(sizeof(ShortestPaths));
-    shortest->noNodes = numVerticies(g);
-    shortest->src = v;
-    //PredNode* forcalloc;
-    shortest->dist = malloc(shortest->noNodes*sizeof(int));
-    shortest->pred = malloc(shortest->noNodes*sizeof(PredNode*));
-    int i = 0;
-    while(i < shortest->noNodes){
-        shortest->dist[i] = infinity;
-        shortest->pred[i] = NULL;
-        i++;
-    }
-
-    int* inthePQ = malloc((shortest->noNodes)*sizeof(int));
-    int h = 0;
-    while(h < shortest->noNodes){
-        inthePQ[h] = 0;
-        h++;
-    }
-    
-    
+    Shortest shortest = new(g,v);
     PQ pq = newPQ();
-    
     ItemPQ first;
     first.key = v;
     first.value = 0;
     addPQ(pq,first);
-    inthePQ[first.key] = 1;
-       //  temp = dequeuePQ(pq);
-    
+    // add v to PQ
     AdjList allOut;
     shortest->dist[v] = 0;
-   
+    // set the distance of v is 0
     while(!PQEmpty(pq)){
-      //  printf("here\n");
-        ItemPQ temp;
-        temp = dequeuePQ(pq);
-        inthePQ[temp.key] = 0;
-        
-    //    printf("here");
-      //  printf("%d\n",temp.key);
-    
+    // if there are still some items in PQ
+        ItemPQ temp = dequeuePQ(pq);
+        // get the head 
         allOut = outIncident(g,temp.key);
-   //     printf("%d\n",temp.key);
-  //   printf("%d\n",allOut->w);
-       // printf("once\n");
+        // loop the vertices that connect with that key
         while(allOut != NULL){
-          //  printf("there\n");
-            PredNode* createNew = malloc(sizeof(PredNode));
-            if(allOut->w != v){
-
-            //    printf("bb\n");
-              //  printf("%d\n",allOut->w);
-                if(shortest->dist[allOut->w] == infinity){
-                    //printf("aa\n");
-                    ItemPQ newOne;
-                    newOne.key = allOut->w;
-                   // printf("keyyy %d\n",newOne.key);
-
-                    
-                    newOne.value = allOut->weight;
-                    
-              //     printf("%d\n",allOut->weight);
-                 //   printf("twice\n");
-                    
-                   //  printf("BeforeAdd\n");
-                   // showPQ(pq);
-                      addPQ(pq,newOne);
-                      inthePQ[allOut->w] = 1;
-                      
-                      
-                   // printf("AfterAdd\n");
-                   // showPQ(pq);
-                    
-                }
-                //showPQ(pq);
-                if(shortest->dist[temp.key] + allOut->weight < shortest->dist[allOut->w]){
-                //    printf("goes here right \n");
-
-
-//                    printf("%d\n",temp.value);
-//                    printf("%d\n",shortest->dist[temp.value]);
-                   //   PredNode* record = shortest->pred[allOut->w];
-               //     PredNode* tempUse;
-                    
-//                    while(record != NULL){
-//                        tempUse = record->next;
-//                        free(record);
-//                        record = tempUse;
-//                    }
-                   
-                  
-                    //printf("ggg\n");
-           //         PredNode* createNew = malloc(sizeof(PredNode));
-                    
-                    //printf("ggg\n");
-                    
-                    createNew->v = temp.key;
-                    
-                    
-                    //printf("%d",createNew->v);
-            //shortest->pred[allOut->w] = malloc(sizeof(PredNode));
-              
-                    shortest->pred[allOut->w] = createNew;
-                    shortest->dist[allOut->w] = shortest->dist[temp.key] + allOut->weight;
-                    if(inthePQ[allOut->w] == 0){
-                        ItemPQ theNewPQ;
-                        theNewPQ.key = allOut->w;
-                        theNewPQ.value = allOut->weight;
-                        addPQ(pq,theNewPQ);
-                        inthePQ[allOut->w] = 1;
-                    }
-                
-                    
-                    
-                }else if(shortest->dist[temp.key] + allOut-> weight == shortest->dist[allOut->w]){
-                    //printf("6\n");
-              
-                    
-                    PredNode* record = shortest->pred[allOut->w];
-                    //right?? record->next at first will not be record. do not need to consider record==null at first???
-                    while(record->next != NULL){
-                        record = record->next;
-                    }
-             //       PredNode* createNew = malloc(sizeof(PredNode));
-                    createNew->v = temp.key;
-                    record->next = createNew;
-                }
+            if (shortest->dist[allOut->w] == infinity) {
+                // if the vertex hasnt been visited
+                ItemPQ newOne =  *newItemPQ(allOut->w, shortest->dist[temp.key] +allOut->weight);
+                // create PQItem
+                addPQ(pq, newOne);
+                // add its distance and vertex to PQ
+                addIntoPred(shortest,allOut->w,temp.key); 
+                // add into pred
+                shortest->dist[allOut->w] = shortest->dist[temp.key] + allOut->weight;
+                // change its distance
+            } else if(shortest->dist[temp.key] + allOut->weight < shortest->dist[allOut->w]){
+                // if the vertex has been visited but find a shorter path
+                replacePred(shortest,allOut->w,temp.key);
+                // delete all the node s->pred[allOut->w] and add the new path into
+                ItemPQ newOne =  *newItemPQ(allOut->w, shortest->dist[temp.key] +allOut->weight);
+                addPQ(pq, newOne);
+                shortest->dist[allOut->w] = shortest->dist[temp.key] + allOut->weight;                 
+            } else if(shortest->dist[temp.key] + allOut-> weight == shortest->dist[allOut->w]){
+                // if the vertex has beem visited but find a path whose distance is same as previous
+                addIntoPred(shortest,allOut->w,temp.key);
+                // add the previous to the end of s->pred[allOut->w]
+                ItemPQ newOne =  *newItemPQ(allOut->w, shortest->dist[temp.key] +allOut->weight);
+                addPQ(pq, newOne);
+                // no need to renew the distance
             }
             allOut = allOut->next;
         }
-        //mshowPQ(pq);
     }
     int l = 0;
     while(l < shortest->noNodes){
@@ -159,7 +142,6 @@ ShortestPaths dijkstra(Graph g, Vertex v){
     }
     return *shortest;
 }
-
 
 
 void  showShortestPaths(ShortestPaths sps){
@@ -182,6 +164,7 @@ void  showShortestPaths(ShortestPaths sps){
         }
         printf("NULL\n");
     }
+    // print all the shortest path and from src and the distance
     
 }
 
@@ -192,28 +175,15 @@ void  freeShortestPaths(ShortestPaths shortest){
     while(i < shortest.noNodes){
         PredNode* record = shortest.pred[i];
         PredNode* tempUse;
-        while(record != NULL){
-            
-            tempUse = record->next;
-            
+        while(record != NULL){ 
+        // loop to free all the pred
+            tempUse = record->next;       
             free(record);
-            
             record = tempUse;
         }
         i++;
     }
-    //dist[]和pred[]两个array需要free吗？ 感觉需要啊。。
     free(shortest.dist);
     free(shortest.pred);
-    //??? no need to free shortest???
-    //free(shortest);
+    // free the array
 }
-
-
-
-
-
-
-
-
-
