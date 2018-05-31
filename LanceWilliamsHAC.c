@@ -147,11 +147,20 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                 m++;
                 continue;
             }
-            if((shortestDistance == infinity)||(shortestDistance != infinity && distance[k][m] > shortestDistance && distance[k][m] != infinity)){
-                shortestDistance = distance[k][m];
-                placeA = k;
-                placeB = m;
-               // printf("%d\n,%d\n,%f\n",placeA,placeB,distance[k][m]);
+            if(method == 1){
+                if(shortestDistance == infinity || distance[k][m] < shortestDistance){
+                    shortestDistance = distance[k][m];
+                    placeA = k;
+                    placeB = m;
+                }
+            }
+            if(method == 2){
+                if(shortestDistance == infinity||(distance[k][m] > shortestDistance && distance[k][m] != infinity)){
+                    shortestDistance = distance[k][m];
+                    placeA = k;
+                    placeB = m;
+                }
+            
             }
             m++;
         }
