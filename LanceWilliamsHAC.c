@@ -1,29 +1,30 @@
 // LanceWilliamsHAC ADT interface for Ass2 (COMP2521)
+// written by Yinan Feng（z5167277@unsw.edu.au）and Haoyue Qiu (z5123104@unsw.edu.au)
 #include<stdio.h>
 #include<stdlib.h>
 
 #include "LanceWilliamsHAC.h"
 
-//#include "Dijkstra.h"
-//#include "PQ.h"
+
 #define infinity 9999999
 
 
 double min(double a,double b);
+// to find the smaller number between a and b
 double max(double a, double b);
+// to find the larger number between a and b
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int method);
+// find shortest distance and merge DNode
 double updateDistance(double a,double b);
+// use Complete link method to update the matrix distance after find shortest distance 
 double updateLongestDistance(double a,double b);
-//int createNewVertex(int a, int b);
+// use Single link method to update the matrix distance after find shortest distance 
 void fillDirectMatrix(Graph g,int** direct);
+// find the direct edges between two vertices
+
 
 
 /*
- * Finds Dendrogram using Lance-Williams algorithm (as discussed in the specs)
- for the given graph g and the specified method for agglomerative clustering.
- Method value 1 represents 'Single linkage', and 2 represents 'Complete linkage'.
- For this assignment, you only need to implement the above two methods.
- 
  The function returns 'Dendrogram' structure (binary tree) with the required information.
  *
  */
@@ -43,8 +44,6 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
     int b = 0;
     while(b < numVerticies(g)){
         Dgram[b] = malloc(sizeof(DNode));
-        //how to record vertex?
-        //Is vertex matters?
         Dgram[b]->vertex = b;
         Dgram[b]->left = NULL;
         Dgram[b]->right = NULL;
@@ -52,37 +51,31 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
     }
 
     //create a matrix to record direct distance between 2 vertex.
+    //set all value in direct matrix with 0;
     int** direct = malloc(numVerticies(g)*sizeof(int*));
     int ss = 0;
     while(ss < numVerticies(g)){
         direct[ss] = malloc(numVerticies(g)*sizeof(int));
+        int kk = 0;
+        while (kk < numVerticies(g)){
+            direct[ss][kk] = 0;
+            kk++;
+        }   
         ss++;
     }
-    //set all value in direct matrix with 0;
-    int qq = 0;
-    while(qq < numVerticies(g)){
-        int kk = 0;
-        while(kk < numVerticies(g)){
-            direct[qq][kk] = 0;
-            kk++;
-        }
-        qq++;
-    }
-
     
     fillDirectMatrix(g,direct);
-
-
-    
-    //record the index to return
+   
+    //record the index of DNode to return
     int recordLast = 0;
-
 
         int z = 0;
         while(z < numVerticies(g)){
+        // create ladder matrix to get 1/max(weight) of direct edges
             int m = z+1;
             while(m < numVerticies(g)){
                 if(direct[z][m] == 0 && direct[m][z] == 0){
+                // if no direct edges
                     distance[z][m] = infinity;
                 }else{
                     double dA = (double)direct[m][z];
@@ -93,22 +86,27 @@ Dendrogram LanceWilliamsHAC(Graph g, int method){
             }
             z++;
         }
-       // printf("%f\n",distance[2][3]);
         
         int p = findShortestAndMerge(g,distance,Dgram,method);
+        // start to find cluster and merge DNnode
         while(p != -1){
+            // constantly find clusters and merge until no cluster to be merged
             recordLast = p;
             p = findShortestAndMerge(g,distance,Dgram,method);
         }
 
     return Dgram[recordLast];
+    // return the last DNode 
 }
+
 
 double min(double a,double b){
     if(a == 0){
+    // if no edges from m->z
         return b; 
     }
     if(b == 0){
+    // if no edges from z->m
         return a;
     }
     if(b <= a){
@@ -125,7 +123,6 @@ double max(double a, double b){
         return a;
     }
     if(a >= b){
-       // printf("%f",a);
         return a;
     }
     return b;
@@ -134,10 +131,12 @@ double max(double a, double b){
 
 
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int method){
-    double shortestDistance = infinity;
+    // initialize singleLink 
+    double singleLink = infinity;
+    double completeLink = 0;
     int placeA = -1;
     int placeB = -1;
-     //   printf("1,2:%f\n",distance[1][2]);
+    
     //find shortest distance
     int k =0;
     while(k < numVerticies(g)){
@@ -148,19 +147,18 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                 continue;
             }
             if(method == 1){
-                if(shortestDistance == infinity || distance[k][m] < shortestDistance){
-                    shortestDistance = distance[k][m];
+                if(distance[k][m] <= singleLink){
+                    singleLink = distance[k][m];
                     placeA = k;
                     placeB = m;
                 }
             }
             if(method == 2){
-                if(shortestDistance == infinity||(distance[k][m] > shortestDistance && distance[k][m] != infinity)){
-                    shortestDistance = distance[k][m];
+                if(distance[k][m] >= completeLink){
+                    completeLink = distance[k][m];
                     placeA = k;
                     placeB = m;
                 }
-            
             }
             m++;
         }
@@ -169,9 +167,11 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
 
     //merge
     if(placeA == -1 && placeB == -1){
+    // all the clusters has been merged
         return -1;
     }else{
         Dendrogram newGram = malloc(sizeof(DNode));
+        // create a newDNode to join cluster A and cluster B
         newGram->vertex = -1;
         newGram->left = Dgram[placeA];
         newGram->right = Dgram[placeB];
@@ -184,6 +184,12 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
         //update the matrix
         int q = 0;
         while(q < numVerticies(g)){
+        // since the array is a ladder so there are several conditions for q
+            if(q == placeA){
+                // renew distance[A][B] to be set as found
+                
+                distance[q][placeB] = 0;
+            }
             if(q < placeA){
                 if(method == 2){
                     distance[q][placeA] = updateDistance(distance[q][placeA],distance[q][placeB]);
@@ -192,10 +198,9 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                     distance[q][placeA] = updateLongestDistance(distance[q][placeA],distance[q][placeB]);
                 }
                 distance[q][placeB] = 0;
+                // find second cluster and merge it to the smaller vertex A
             }
-            if(q == placeA){
-                distance[q][placeB] = 0;
-            }
+            
             if(q > placeA && q < placeB){
                 if(method == 2){
                     distance[placeA][q] = updateDistance(distance[placeA][q],distance[q][placeB]);
@@ -220,15 +225,14 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
             }
             q++;
         }
-      //  printf("2,3:%f\n",distance[2][3]);
-      // printf("1,2:%f\n",distance[1][2]);
         return placeA;
     }
 }
 
 
-//for shortest
+//for completed link method
 double updateDistance(double a,double b){
+    // get max{cluster a, cluster b}
     if(a == infinity && b == infinity){
         return infinity;
     }
@@ -244,8 +248,9 @@ double updateDistance(double a,double b){
     return b;
 }
 
-//longest
+//for single link method method
 double updateLongestDistance(double a,double b){
+    // get min{cluster a, cluster b}
     if(a == infinity && b == infinity){
         return infinity;
     }
@@ -263,6 +268,7 @@ double updateLongestDistance(double a,double b){
 
 
 void fillDirectMatrix(Graph g,int** direct){
+    //// find the weight of direct edges
     int i = 0;
     while(i < numVerticies(g)){
         AdjList record = outIncident(g,i);
@@ -273,40 +279,3 @@ void fillDirectMatrix(Graph g,int** direct){
         i++;
     }
 }
-
-
-
-
-
-
-
-/*
-//will it too big? int: overflow
-int createNewVertex(int a, int b){
-    int pow = 10;
-    while(b >= pow){
-        pow = pow * 10;
-    }
-    return a * pow + b;
-}
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
