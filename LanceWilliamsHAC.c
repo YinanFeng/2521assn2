@@ -262,7 +262,7 @@ double updateLongestDistance(double a,double b){
 
 
 void fillDirectMatrix(Graph g,int** direct){
-    //// find the weight of direct edges
+    // find the weight of direct edges
     int i = 0;
     while(i < numVerticies(g)){
         AdjList record = outIncident(g,i);
@@ -275,20 +275,12 @@ void fillDirectMatrix(Graph g,int** direct){
 }
 
 void freeDendrogram(Dendrogram d){
-    //add here...
+    if (d == NULL) return
+    freeDendrogram(d->left);
+    freeDendrogram(d->right);
+    freeDendrogram(d);
+    // recursivly free all the nodes in the tree
 
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
