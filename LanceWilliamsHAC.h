@@ -4,12 +4,12 @@
 	#define GRAPH
 	#include "Graph.h"
 #endif
+
 typedef struct DNode *Dendrogram;
 typedef struct DNode {
    int  vertex;
    Dendrogram left, right;
 } DNode;
-
 
 
 
@@ -24,5 +24,9 @@ typedef struct DNode {
  * 
  */
 Dendrogram LanceWilliamsHAC(Graph g, int method);
+
+
+void freeDendrogram(Dendrogram d);
+
 
 

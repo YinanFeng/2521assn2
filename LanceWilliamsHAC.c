@@ -132,10 +132,12 @@ double max(double a, double b){
 
 int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int method){
     // initialize singleLink 
-    double singleLink = infinity;
-    double completeLink = 0;
+    double shortest = infinity;
     int placeA = -1;
     int placeB = -1;
+    
+
+    
     
     //find shortest distance
     int k =0;
@@ -146,19 +148,10 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
                 m++;
                 continue;
             }
-            if(method == 1){
-                if(distance[k][m] <= singleLink){
-                    singleLink = distance[k][m];
-                    placeA = k;
-                    placeB = m;
-                }
-            }
-            if(method == 2){
-                if(distance[k][m] >= completeLink){
-                    completeLink = distance[k][m];
-                    placeA = k;
-                    placeB = m;
-                }
+            if(distance[k][m] <= shortest){
+                shortest = distance[k][m];
+                placeA = k;
+                placeB = m;
             }
             m++;
         }
@@ -185,6 +178,7 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
         int q = 0;
         while(q < numVerticies(g)){
         // since the array is a ladder so there are several conditions for q
+
             if(q == placeA){
                 // renew distance[A][B] to be set as found
                 
@@ -215,19 +209,19 @@ int findShortestAndMerge(Graph g, double **distance, Dendrogram *Dgram, int meth
             }
             if(q > placeB){
                 if(method == 2){
-                    distance[q][placeA] = updateDistance(distance[placeA][q],distance[placeB][q]);
+                    distance[placeA][q] = updateDistance(distance[placeA][q],distance[placeB][q]);
                 }
                 if(method == 1){
-                    distance[q][placeA] = updateLongestDistance(distance[placeA][q],distance[placeB][q]);
+                    distance[placeA][q] = updateLongestDistance(distance[placeA][q],distance[placeB][q]);
                 }
-                distance[placeA][q] = updateDistance(distance[placeA][q],distance[placeB][q]);
                 distance[placeB][q] = 0;
             }
             q++;
         }
-        return placeA;
     }
+    return placeA;
 }
+
 
 
 //for completed link method
@@ -279,3 +273,22 @@ void fillDirectMatrix(Graph g,int** direct){
         i++;
     }
 }
+
+void freeDendrogram(Dendrogram d){
+    //add here...
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
