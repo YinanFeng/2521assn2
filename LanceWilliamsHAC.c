@@ -275,10 +275,7 @@ void fillDirectMatrix(Graph g,int** direct){
 }
 
 void freeDendrogram(Dendrogram d){
-    if (d == NULL) return
-    freeDendrogram(d->left);
-    freeDendrogram(d->right);
-    freeDendrogram(d);
+
     // recursivly free all the nodes in the tree
 
 
